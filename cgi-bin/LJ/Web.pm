@@ -2484,17 +2484,13 @@ sub need_res {
     foreach my $reskey (@_) {
         die "Bogus reskey $reskey" unless $reskey =~ m!^(js|stc)/!;
 
-        my $resinclude;
-        $resinclude = $LJ::MINIFY{$reskey} unless $LJ::IS_DEV_SERVER;
-        $resinclude ||= $reskey;
-
         # we put javascript in the 'default' group and CSS in the 'all' group
         # since we need CSS everywhere and we are switching JS groups
         my $lgroup = $group || ( $reskey =~ /^js/ ? 'default' : 'all' );
         unless ($LJ::NEEDED_RES{"$lgroup-$reskey"}++) {
             $LJ::NEEDED_RES[$priority] ||= [];
 
-            push @{$LJ::NEEDED_RES[$priority]}, [ $lgroup, $resinclude ];
+            push @{$LJ::NEEDED_RES[$priority]}, [ $lgroup, $reskey ];
         }
     }
 }
@@ -2512,19 +2508,21 @@ sub res_includes {
     my $do_concat = $LJ::IS_SSL ? $LJ::CONCAT_RES_SSL : $LJ::CONCAT_RES;
 
     # use correct root and prefixes for SSL pages
-    my ($siteroot, $imgprefix, $statprefix, $jsprefix, $wstatprefix);
+    my ($siteroot, $imgprefix, $statprefix, $jsprefix, $wstatprefix, $iconprefix);
     if ($LJ::IS_SSL) {
         $siteroot = $LJ::SSLROOT;
         $imgprefix = $LJ::SSLIMGPREFIX;
         $statprefix = $LJ::SSLSTATPREFIX;
         $jsprefix = $LJ::SSLJSPREFIX;
         $wstatprefix = $LJ::SSLWSTATPREFIX;
+        $iconprefix = $LJ::USERPIC_ROOT;
     } else {
         $siteroot = $LJ::SITEROOT;
         $imgprefix = $LJ::IMGPREFIX;
         $statprefix = $LJ::STATPREFIX;
         $jsprefix = $LJ::JSPREFIX;
         $wstatprefix = $LJ::WSTATPREFIX;
+        $iconprefix = $LJ::USERPIC_ROOT;
     }
 
     if ( $include_js ) {
@@ -2566,6 +2564,7 @@ sub res_includes {
                     imgprefix => "$imgprefix",
                     siteroot => "$siteroot",
                     statprefix => "$statprefix",
+                    iconprefix => "$iconprefix",
                     currentJournalBase => "$journal_base",
                     currentJournal => "$journal",
                     has_remote => $hasremote,
@@ -3150,14 +3149,14 @@ LOGIN_BAR
     # a quick little routine to use when cycling through the options
     # to create the style links for the nav bar
     my $make_style_link = sub {
-        return create_url( $uri,
+        return LJ::ehtml( create_url( $uri,
             host => $host,
             cur_args => $argshash,
             # change the style arg
             'args' => { 'style' => $_[0] },
             # keep any other existing arguments
             'keep_args' => 1,
-        );
+        ) );
     };
 
     # cycle through all possibilities, add the valid ones
