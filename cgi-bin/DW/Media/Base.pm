@@ -36,7 +36,7 @@ sub security { $_[0]->{security} }
 sub allowmask { $_[0]->{allowmask} }
 sub logtime { $_[0]->{logtime} }
 sub mimetype { $_[0]->{mimetype} }
-sub mogkey { "media:$_[0]->{userid}:$_[0]->{mediaid}" }
+sub mogkey { "media:$_[0]->{userid}:$_[0]->{versionid}" }
 sub ext { $_[0]->{ext} }
 
 # These change depending on the version we're showing.
@@ -56,8 +56,8 @@ sub url {
     # If we're using a version (versionid defined) then we want to insert the
     # width and height to the URL.
     my $extra = '';
-    if ( exists $self->{versionid} ) {
-        $extra = '/' . $self->{width} . 'x' . $self->{height};
+    if ( $self->{mediaid} != $self->{versionid} ) {
+        $extra = $self->{width} . 'x' . $self->{height} . '/';
     }
 
     return $self->u->journal_base . '/file/' . $extra . $self->{displayid} .

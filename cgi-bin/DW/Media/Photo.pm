@@ -54,7 +54,7 @@ sub _resize {
 
     # Do not allow resizing of scaled images.
     croak 'Attempted to resize already resized image.'
-        if $self->{versionid};
+        if $self->{mediaid} != $self->{versionid};
 
     # We evaluate this so that we only load Image::Magick in the context that
     # we need to use it. Saves us from loading it on webservers.

@@ -45,6 +45,9 @@ sub new {
     # Calculate displayid here so it ends up in the object early.
     $hr->{displayid} = $hr->{mediaid} * 256 + $hr->{anum};
 
+    # Set version to the original, since we always load that by default.
+    $hr->{versionid} = $hr->{mediaid};
+
     # Metadata information, including height and width for a given image and
     # all of the alternates we have.
     my $vers = $opts{user}->selectall_hashref(
