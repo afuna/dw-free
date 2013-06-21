@@ -8,7 +8,7 @@
 #      Andrea Nall <anall@andreanall.com>
 #      Mark Smith <mark@dreamwidth.org>
 #
-# Copyright (c) 2009-2012 by Dreamwidth Studios, LLC.
+# Copyright (c) 2009-2013 by Dreamwidth Studios, LLC.
 #
 # This program is free software; you may redistribute it and/or modify it under
 # the same terms as Perl itself.  For a copy of the license, please reference
@@ -110,6 +110,8 @@ Returns if the format is valid for this CallInfo
 
 sub format_valid {
     my $formats = $_[0]->{__hash}->{formats};
+    warn LJ::D( $formats );
+    warn LJ::D( $_[0]->format );
     return 1 if $formats == 1;
     return $formats->{$_[0]->format} || 0;
 }
@@ -126,9 +128,17 @@ sub method_valid {
     return $methods->{$_[1]} || 0;
 }
 
+=head2 C<< $self->apiver >>
+
+Returns the API version requested.
+
+=cut
+
+sub apiver { return $_[0]->{apiver}; }
+
 =head2 C<< $self->role >>
 
-Current mode: 'app' or 'user' or 'ssl'
+Current mode: 'app' or 'user' or 'ssl' or 'api'
 
 =cut
 
@@ -176,7 +186,7 @@ sub username { return $_[0]->{username}; }
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2009-2010 by Dreamwidth Studios, LLC.
+Copyright (c) 2009-2013 by Dreamwidth Studios, LLC.
 
 This program is free software; you may redistribute it and/or modify it under
 the same terms as Perl itself. For a copy of the license, please reference
