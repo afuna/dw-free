@@ -1,0 +1,60 @@
+[%# media/new.tt
+
+Page to upload new files
+
+Authors:
+    Afuna <coder.dw@afunamatata.com>
+
+Copyright (c) 2013 by Dreamwidth Studios, LLC.
+
+This program is free software; you may redistribute it and/or modify it under
+the same terms as Perl itself.  For a copy of the license, please reference
+'perldoc perlartistic' or 'perldoc perlgpl'.
+%]
+
+[% sections.title = "Image Uploads" %]
+
+[%- CALL dw.active_resource_group( "foundation" ) -%]
+
+[%- dw.need_res( { group => "foundation" }
+    "js/jquery/jquery.ui.widget.js"
+    "js/jquery.fileupload.js"
+
+    "js/vendor/jquery.iframe-transport.js"
+    "js/vendor/jquery.fileupload.js"
+    "js/vendor/load-image.min.js"
+    "js/vendor/jquery.fileupload-process.js"
+    "js/vendor/jquery.fileupload-image.js"
+
+    "stc/fileupload.css"
+) -%]
+
+
+<div class="row">
+    <div class="large-12 columns">
+    <form enctype="multipart/form-data" method="POST">
+        <fieldset id="fileupload">
+        <legend>Upload</legend>
+        <div class="row">
+            <div class="large-12 columns">
+                <input type="file" id="files" name="files" multiple />
+            </div>
+            <div class="large-12 columns">
+                <div class="drop_zone">or drop images here</div>
+            </div>
+        </div>
+        </fieldset>
+
+        <div class="row" >
+            <output class="large-12 columns" id="filepreview"><ul></ul></output>
+        </div>
+
+
+        <div class="row">
+            <div class="large-12 columns">
+                <input type="submit" value="Upload" />
+            </div>
+        </div>
+    </form>
+    </div>
+</div>

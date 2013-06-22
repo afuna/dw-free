@@ -30,6 +30,7 @@ DW::Routing->register_regex( qr!^/file/(\d+x\d+|full)(/\w:[\d\w]+)*/(\d+)$!,
         \&media_handler, user => 1, formats => 1 );
 DW::Routing->register_string( '/file/list', \&media_manage_handler, app => 1 );
 DW::Routing->register_string( '/file/edit', \&media_bulkedit_handler, app => 1 );
+DW::Routing->register_string( '/file/new', \&media_new_handler, app => 1  );
 
 sub media_manage_handler {
     my ( $ok, $rv ) = controller();
@@ -167,4 +168,10 @@ sub media_handler {
     return $r->OK;
 }
 
+sub media_new_handler {
+    my ( $ok, $rv ) = controller();
+    return $rv unless $ok;
+
+    return DW::Template->render_template( 'media/new.tt', $rv );
+}
 1;

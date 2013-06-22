@@ -1,0 +1,33 @@
+.preview {
+  max-height: 75px;
+  display: inline-block;
+  margin: 10px 5px 0 0;
+}
+
+.drop_zone {
+  color: silver;
+  font-size: 6em;
+  padding: 20px;
+  border: 3px dashed;
+  text-align: center;
+}
+
+output {
+  margin-top: 1.5em;
+}
+
+output ul {
+  list-style: none;
+}
+
+#filepreview li.row {
+  margin-top: 1.5em;
+}
+
+#fileupload {
+  border: none;
+}
+
+.progress {
+  margin-top: 1em;
+}
