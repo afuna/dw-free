@@ -27,7 +27,6 @@ use LJ::JSON;
 DW::Routing->register_api_endpoints(
         [ '/file/edit',   \&file_edit_handler,   1 ],
         [ '/file/new',    \&file_new_handler,    1 ],
-        [ '/file/upload', \&file_upload_handler, 1 ],
 );
 
 #{
@@ -45,8 +44,7 @@ DW::Routing->register_api_endpoints(
 #    ]
 #}
 
-# Used when requesting an id for a new file. Allocates a unique media ID and
-# returns it for use in the upload handler.
+# Allows uploading a file. Allocates and returns a unique media ID for the upload
 sub file_new_handler {
     my ( $ok, $rv ) = controller();
     return $rv unless $ok;
@@ -60,15 +58,6 @@ sub file_new_handler {
     # so they only hurt themselves, but why let it?)
 
     return api_ok( { id => $id } );
-}
-
-# Allows uploading a file. You give us the ID and file contents. You must have
-# called /api/file/new first to get an upload ID.
-sub file_upload_handler {
-    my ( $ok, $rv ) = controller();
-    return $rv unless $ok;
-
-    return api_ok( 1 );
 }
 
 # Allows editing the metadata and security on a media object.

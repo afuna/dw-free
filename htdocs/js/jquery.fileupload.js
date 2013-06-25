@@ -20,7 +20,7 @@ $(function() {
 
     $("#fileupload").fileupload({
         dataType: 'json',
-        url: Site.siteroot + '/api/v1/file/upload',
+        url: Site.siteroot + '/api/v1/file/new',
 
         autoUpload: false,
 
@@ -43,41 +43,39 @@ $(function() {
                 '</div></li>' ).appendTo("#filepreview ul");
             _uiCounter++;
 
-            // this is necessary so that e.g., Chrome doesn't collapse multiple POSTs into one
-            $.ajax( Site.siteroot + "/api/v1/file/new?rand=" + Math.random(), {
-                type: "POST",
-                dataType: "json"
-            }).done(function(apiResponse) {
-                if ( apiResponse.success ) {
-                    var fileid = apiResponse.result.id;
+            data.formData = {};
+            data.submit();
 
-                    // upload the image for this id
-                    data.formData = {
-                        "id": fileid
-                    };
 
-                    // now submit!
-                    data.submit();
-
-                    data.context
-                        // update the form field names to use this image id
-                        .find(":input").prop( "name", function(i, name){
-                            this.name = name + "_" + fileid;
-                        })
-
-                        // and make it easier for us to figure out the form fields we expect to work with
-                        // (we don't want fileids_### on this one)
-                        .end().append( "<input type='hidden' name='fileids' value='" + fileid +"' />");
-                }
-
-                // TODO: error handling
-            }).fail( function() {
-                // TODO: error handling
-            })
+            // }).fail( function() {
+            //     // TODO: error handling
+            // })
         }
 
         // and then add a button to save metadata
         $("input[type=submit]").val( "Save Descriptions" ).show();
+    })
+    .on( 'fileuploaddone', function( e, data ) {
+        var response = data.result;
+
+        if ( response.success ) {
+            var fileid = response.result.id;
+
+            data.context
+                // update the form field names to use this image id
+                .find(":input").prop( "name", function(i, name){
+                    this.name = name + "_" + fileid;
+                })
+
+                // and make it easier for us to figure out the form fields we expect to work with
+                // (we don't want fileids_### on this one)
+                .end().append( "<input type='hidden' name='fileids' value='" + fileid +"' />");
+        }
+
+        // TODO: error-handling
+    })
+    .on( 'fileuploadfail', function( e, data) {
+        // TODO: error-handling
     })
     .on( 'fileuploadprocessalways', function( e, data ) {
         var index = data.index;
