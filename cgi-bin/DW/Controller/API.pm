@@ -28,11 +28,15 @@ use Carp qw/ croak /;
 use base qw/ Exporter /;
 @DW::Controller::API::EXPORT = qw/ api_ok api_error /;
 
-# Usage: return api_error( 'format/message', [arg, arg, arg...] )
-# Returns a standard format JSON error message. The first argument is a string
-# that might be a format string: it's passed to sprintf with the rest of the
+# Usage: return api_error( $r->STATUS_CODE_CONSTANT,
+#                          'format/message', [arg, arg, arg...] )
+# Returns a standard format JSON error message.
+# The first argument is the status code
+# The second argument is a string that might be a format string:
+# it's passed to sprintf with the rest of the
 # arguments.
 sub api_error {
+    my $status_code = shift;
     my $message = scalar @_ >= 1 ?
         sprintf( shift, @_ ) : 'Unknown error.';
 
@@ -43,7 +47,7 @@ sub api_error {
 
     my $r = DW::Request->get;
     $r->print( to_json( $res ) );
-    $r->status( 200 );
+    $r->status( $status_code );
     return;
 }
 

@@ -49,10 +49,11 @@ sub file_new_handler {
     my ( $ok, $rv ) = controller();
     return $rv unless $ok;
 
+    my $r = $rv->{r};
     LJ::isu( $rv->{u} )
-        or return api_error( 'Not logged in' );
+        or return api_error( $r->HTTP_UNAUTHORIZED, 'Not logged in' );
     my $id = LJ::alloc_user_counter( $rv->{u}, 'A' )
-        or return api_error( 'Failed to allocate counter' );
+        or return api_error( $r->SERVER_ERROR, 'Failed to allocate counter' );
 
     # FIXME: rate limit users so they can't spin the counter (it's per-user,
     # so they only hurt themselves, but why let it?)
