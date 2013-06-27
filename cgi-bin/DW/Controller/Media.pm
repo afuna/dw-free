@@ -22,7 +22,7 @@ use DW::Routing;
 use DW::Request;
 use DW::Controller;
 
-my %VALID_SIZES = ( map { $_ => 1 } ( 320, 200, 640, 480, 1024, 768, 1280,
+my %VALID_SIZES = ( map { $_ => 1 } ( 100, 320, 200, 640, 480, 1024, 768, 1280,
             800, 600, 720, 1600, 1200 ) );
 
 DW::Routing->register_regex( qr!^/file/(\d+)$!, \&media_handler, user => 1, formats => 1 );

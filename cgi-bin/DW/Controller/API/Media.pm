@@ -22,6 +22,7 @@ use DW::Routing;
 use DW::Request;
 use DW::Controller;
 use DW::Controller::API;
+use DW::Media;
 use LJ::JSON;
 
 DW::Routing->register_api_endpoints(
@@ -44,7 +45,7 @@ DW::Routing->register_api_endpoints(
 #    ]
 #}
 
-# Allows uploading a file. Allocates and returns a unique media ID for the upload
+# Allows uploading a file. Allocates and returns a unique media ID for the upload.
 sub file_new_handler {
     my ( $ok, $rv ) = controller();
     return $rv unless $ok;
@@ -52,13 +53,36 @@ sub file_new_handler {
     my $r = $rv->{r};
     LJ::isu( $rv->{u} )
         or return api_error( $r->HTTP_UNAUTHORIZED, 'Not logged in' );
-    my $id = LJ::alloc_user_counter( $rv->{u}, 'A' )
-        or return api_error( $r->SERVER_ERROR, 'Failed to allocate counter' );
 
-    # FIXME: rate limit users so they can't spin the counter (it's per-user,
-    # so they only hurt themselves, but why let it?)
+    my $uploads = $r->uploads;
+    return api_error( $r->HTTP_BAD_REQUEST, 'No uploads found' )
+        unless ref $uploads eq 'ARRAY' && scalar @$uploads;
 
-    return api_ok( { id => $id } );
+    foreach my $upload ( @$uploads ) {
+        my ( $type, $ext ) = DW::Media->get_upload_type( $upload->{'content-type' } );
+        next unless $type == DW::Media::TYPE_PHOTO;
+
+        # Try to upload this item since we know it's a photo.
+        my $obj = DW::Media->upload_media(
+            user     => $rv->{u},
+            data     => $upload->{body},
+            security => $rv->{u}->newpost_minsecurity,
+        );
+        return api_error( $r->SERVER_ERROR, 'Failed to upload media' )
+            unless $obj;
+
+        # For now, we only support a single upload per call, so finish now.
+        return api_ok( {
+            id => $obj->id,
+            url => $obj->url,
+            thumbnail_url => $obj->url( extra => '100x100/' ),
+            name => "image",
+            type => $obj->mimetype,
+            size => $obj->size,
+        } );
+    }
+
+    return api_error( $r->HTTP_BAD_REQUEST, 'No uploads found' );
 }
 
 # Allows editing the metadata and security on a media object.
