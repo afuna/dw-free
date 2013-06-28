@@ -8,7 +8,7 @@
 #      Mark Smith <mark@dreamwidth.org>
 #      Andrea Nall <anall@andreanall.com>
 #
-# Copyright (c) 2008 by Dreamwidth Studios, LLC.
+# Copyright (c) 2008-2013 by Dreamwidth Studios, LLC.
 #
 # This program is free software; you may redistribute it and/or modify it under
 # the same terms as Perl itself.  For a copy of the license, please reference
@@ -271,9 +271,6 @@ sub redirect {
     return $self->REDIRECT;
 }
 
-# Some helper methods for returning specific values from the headers.
-sub content_type { $_[0]->header_in( 'Content-Type' ) }
-
 # Returns an array of uploads that were received in this request. Each upload
 # is a hashref of certain data.
 sub uploads {
@@ -284,7 +281,7 @@ sub uploads {
     return $self->{uploads} = []
         unless $body && $self->method eq 'POST';
 
-    my $sep = ( $self->content_type =~ m!^multipart/form-data;\s*boundary=(\S+)! ) ? $1 : undef;
+    my $sep = ( $self->header_in( 'Content-Type' ) =~ m!^multipart/form-data;\s*boundary=(\S+)! ) ? $1 : undef;
     croak 'Unknown content type in upload.' unless defined $sep;
 
     my @lines = split /\r\n/, $body;
