@@ -47,10 +47,15 @@ DW::Routing->register_api_endpoints(
 
 # Allows uploading a file. Allocates and returns a unique media ID for the upload.
 sub file_new_handler {
-    my ( $ok, $rv ) = controller();
+    # we want to handle the not logged in case ourselves
+    my ( $ok, $rv ) = controller( anonymous => 1 );
     return $rv unless $ok;
 
     my $r = $rv->{r};
+
+    $r->did_post
+        or return api_error( $r->HTTP_METHOD_NOT_ALLOWED, 'Needs a POST request' );
+
     LJ::isu( $rv->{u} )
         or return api_error( $r->HTTP_UNAUTHORIZED, 'Not logged in' );
 
@@ -87,8 +92,17 @@ sub file_new_handler {
 
 # Allows editing the metadata and security on a media object.
 sub file_edit_handler {
-    my ( $ok, $rv ) = controller();
+    # we want to handle the not logged in case ourselves
+    my ( $ok, $rv ) = controller( anonymous => 1 );
     return $rv unless $ok;
+
+    my $r = $rv->{r};
+
+    $r->did_post
+        or return api_error( $r->HTTP_METHOD_NOT_ALLOWED, 'Needs a POST request' );
+
+    LJ::isu( $rv->{u} )
+        or return api_error( $r->HTTP_UNAUTHORIZED, 'Not logged in' );
 
     return api_ok( 1 );
 
