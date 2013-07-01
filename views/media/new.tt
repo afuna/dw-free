@@ -37,16 +37,13 @@ the same terms as Perl itself.  For a copy of the license, please reference
         <legend>Upload</legend>
         <div class="row">
             <div class="large-12 columns">
-                <input type="file" id="files" name="files" multiple />
-            </div>
-            <div class="large-12 columns">
-                <div class="drop_zone">or drop images here</div>
+                <input type="file" id="files" name="files" />
             </div>
         </div>
         </fieldset>
 
         <div class="row" >
-            <output class="large-12 columns" id="filepreview"><ul></ul></output>
+            <output class="large-12 columns upload-form-preview"><ul></ul></output>
         </div>
 
 
@@ -58,3 +55,65 @@ the same terms as Perl itself.  For a copy of the license, please reference
     </form>
     </div>
 </div>
+
+<script id='template-file-metadata' type="text/x-template">
+[% BLOCK row_with_field %]
+[% DEFAULT
+    labelSize = 2
+    fieldSize = 12 - labelSize
+    type      = "text"
+%]
+<div class="row">
+    <div class="large-[% labelSize %] columns">
+        [%-# "for" will be added by JS -%]
+        <label class="inline right" data-original-name=[% name %]>[% label %]</label>
+    </div>
+    <div class="large-[% fieldSize %] columns">
+        [%-# "id" will be added by JS -%]
+        [% IF type == "text" %]
+            [%- form.textbox( "name" = name
+                          "data-original-name" = name
+            ) -%]
+        [% ELSIF type == "select" %]
+            [%- form.select( "items"   = items
+                             "name"    = name
+                             "data-original-name" = name )
+            -%]
+        [% END %]
+    </div>
+</div>
+[% END %]
+
+<li class='row'>
+    <div class="large-3 columns image-preview">
+        <div class="progress large-8 success"><span class="meter" style="width:0"></span></div>
+    </div>
+    <div class="large-9 columns">
+        <div class="row">
+            <div class="large-8 columns">
+                [%- INCLUDE row_with_field(
+                        label = "Title"
+                        name  = "title"
+
+                        labelSize = 3
+                ) -%]
+            </div>
+            <div class="large-4 columns">
+                [%- INCLUDE row_with_field(
+                    label = "Security"
+                    name  = "security"
+
+                    type  = "select"
+                    items = security
+
+                    labelSize = 4
+                ) -%]
+            </div>
+        </div>
+
+        [%- INCLUDE row_with_field( label = "Alt Text", name = "alttext") -%]
+        [%- INCLUDE row_with_field( label = "Description", name = "description") -%]
+        [%- INCLUDE row_with_field( label = "Source", name = "source") -%]
+    </div>
+</li>
+</script>

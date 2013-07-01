@@ -2,26 +2,11 @@ $(function() {
     // this variable is just so we can map the label to its input
     // it is not the same as the file id
     var _uiCounter = 0;
+
     var _hasUnsubmitted = false;
 
     // hide the upload button, we'll have another one for saving descriptions
     $("input[type=submit]").hide();
-
-    var newField = function(label, name, numLabelColumns, fieldHTML) {
-        if ( numLabelColumns == undefined )
-            numLabelColumns = 2;
-        var numFieldColumns = 12 - numLabelColumns;
-
-        var fieldIdentifier = name + _uiCounter;
-        return '<div class="row">' +
-                    '<div class="large-' + numLabelColumns + ' columns">' +
-                        '<label for="' + fieldIdentifier + '" class="inline right">' + label + '</label>' +
-                    '</div>' +
-                    '<div class="large-' + numFieldColumns + ' columns">' +
-                        ( fieldHTML ? fieldHTML : '<input type="text" name="' + name + '" id="' + fieldIdentifier + '"/>' ) +
-                    '</div>' +
-                '</div>'
-    };
 
     var _doEditRequest = function( formFields ) {
         // handle submit via ajax instead
@@ -33,7 +18,14 @@ $(function() {
         } );
     };
 
-    $(".upload-form-file-inputs").fileupload({
+    $(".upload-form-file-inputs")
+        .find('input[type=file]')
+            .attr( 'multiple', 'multiple' )
+        .end()
+        .find('.row')
+            .append('<div class="large-12 columns"><div class="drop_zone">or drop images here</div></div>')
+        .end()
+    .fileupload({
         dataType: 'json',
         url: Site.siteroot + '/api/v1/file/new',
 
@@ -43,29 +35,22 @@ $(function() {
         previewMaxHeight: 800
     })
     .on( 'fileuploadadd', function(e, data) {
+        var $output = $(".upload-form-preview ul");
         for ( var i = 0, f; f = data.files[i]; i++ ) {
             if ( f.type && f.type.indexOf( 'image') !== 0 ) return;
 
             // show the file preview and let the user upload metadata
-            data.context = $( '<li class="row">' +
-                '<div class="large-3 columns image-preview">' +
-                    '<div class="progress large-8 success"><span class="meter" style="width:0"></span></div>' +
-                '</div>' +
-                '<div class="large-9 columns">' +
-                    '<div class="row">' +
-                        '<div class="large-8 columns">' +
-                            newField( "Title", "title", 3 ) +
-                        '</div>' +
-                        '<div class="large-4 columns">' +
-                            newField( "Security", "security", 4,
-                                "<select name='security'><option>Public</option><option>Access</option><option>Private</option></select>"
-                            ) +
-                        '</div>' +
-                    '</div>' +
-                newField("Alt Text", "alttext") +
-                newField("Description", "description") +
-                newField("Source", "source") +
-                '</div></li>' ).appendTo("#filepreview ul");
+            data.context = $($('#template-file-metadata').html())
+                .appendTo( $output );
+
+            data.context
+                .find("label").attr( "for", function() {
+                    return $(this).data("original-name") + _uiCounter;
+                }).end()
+                .find(":input").attr( "id", function() {
+                    return $(this).data("original-name") + _uiCounter;
+                })
+
             _uiCounter++;
 
             data.formData = {};
