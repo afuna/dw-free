@@ -7,7 +7,7 @@
 # Authors:
 #      Mark Smith <mark@dreamwidth.org>
 #
-# Copyright (c) 2010 by Dreamwidth Studios, LLC.
+# Copyright (c) 2010-2013 by Dreamwidth Studios, LLC.
 #
 # This program is free software; you may redistribute it and/or modify it under
 # the same terms as Perl itself. For a copy of the license, please reference
@@ -171,6 +171,12 @@ sub media_handler {
 sub media_new_handler {
     my ( $ok, $rv ) = controller();
     return $rv unless $ok;
+
+    $rv->{security} = [
+        { value => "public",  text => LJ::Lang::ml( 'label.security.public2' ) },
+        { value => "usemask",  text => LJ::Lang::ml( 'label.security.accesslist' ) },
+        { value => "private", text => LJ::Lang::ml( 'label.security.private2' ) },
+    ];
 
     return DW::Template->render_template( 'media/new.tt', $rv );
 }
