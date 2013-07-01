@@ -32,8 +32,8 @@ the same terms as Perl itself.  For a copy of the license, please reference
 
 <div class="row">
     <div class="large-12 columns">
-    <form enctype="multipart/form-data" method="POST">
-        <fieldset id="fileupload">
+    <form enctype="multipart/form-data" method="POST" class='upload-form'>
+        <fieldset class="upload-form-file-inputs">
         <legend>Upload</legend>
         <div class="row">
             <div class="large-12 columns">
