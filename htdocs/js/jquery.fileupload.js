@@ -2,23 +2,38 @@ $(function() {
     // this variable is just so we can map the label to its input
     // it is not the same as the file id
     var _uiCounter = 0;
+    var _hasUnsubmitted = false;
 
     // hide the upload button, we'll have another one for saving descriptions
     $("input[type=submit]").hide();
 
-    var newField = function(label, name) {
+    var newField = function(label, name, numLabelColumns, fieldHTML) {
+        if ( numLabelColumns == undefined )
+            numLabelColumns = 2;
+        var numFieldColumns = 12 - numLabelColumns;
+
         var fieldIdentifier = name + _uiCounter;
         return '<div class="row">' +
-                    '<div class="large-2 columns">' +
-                        '<label for="' + fieldIdentifier + '" class="inline">' + label + '</label>' +
+                    '<div class="large-' + numLabelColumns + ' columns">' +
+                        '<label for="' + fieldIdentifier + '" class="inline right">' + label + '</label>' +
                     '</div>' +
-                    '<div class="large-10 columns">' +
-                        '<input type="text" name="' + name + '" id="' + fieldIdentifier + '"/>' +
+                    '<div class="large-' + numFieldColumns + ' columns">' +
+                        ( fieldHTML ? fieldHTML : '<input type="text" name="' + name + '" id="' + fieldIdentifier + '"/>' ) +
                     '</div>' +
                 '</div>'
     };
 
-    $("#fileupload").fileupload({
+    var _doEditRequest = function( formFields ) {
+        // handle submit via ajax instead
+        $.ajax( Site.siteroot + '/api/v1/file/edit', {
+            'type'      : 'POST',
+            'dataType'  : 'json',
+
+            'data'      : formFields
+        } );
+    };
+
+    $(".upload-form-file-inputs").fileupload({
         dataType: 'json',
         url: Site.siteroot + '/api/v1/file/new',
 
@@ -37,19 +52,24 @@ $(function() {
                     '<div class="progress large-8 success"><span class="meter" style="width:0"></span></div>' +
                 '</div>' +
                 '<div class="large-9 columns">' +
-                newField("Title", "title") +
-                newField("Description", "description") +
+                    '<div class="row">' +
+                        '<div class="large-8 columns">' +
+                            newField( "Title", "title", 3 ) +
+                        '</div>' +
+                        '<div class="large-4 columns">' +
+                            newField( "Security", "security", 4,
+                                "<select name='security'><option>Public</option><option>Access</option><option>Private</option></select>"
+                            ) +
+                        '</div>' +
+                    '</div>' +
                 newField("Alt Text", "alttext") +
+                newField("Description", "description") +
+                newField("Source", "source") +
                 '</div></li>' ).appendTo("#filepreview ul");
             _uiCounter++;
 
             data.formData = {};
             data.submit();
-
-
-            // }).fail( function() {
-            //     // TODO: error handling
-            // })
         }
 
         // and then add a button to save metadata
@@ -65,7 +85,7 @@ $(function() {
                 // update the form field names to use this image id
                 .find(":input").prop( "name", function(i, name){
                     this.name = name + "_" + fileid;
-                })
+                }).attr( 'data-has-id', true )
 
                 // and make it easier for us to figure out the form fields we expect to work with
                 // (we don't want fileids_### on this one)
@@ -88,5 +108,26 @@ $(function() {
     .on( 'fileuploadprogress', function (e, data) {
        var progress = parseInt(data.loaded / data.total * 100, 10);
        data.context.find( ".meter" ).css( 'width', progress + '%' );
-    });
+    })
+    // now make sure we upload the metadata in case we tried to submit metadata
+    // before we got an id back (from the file upload)
+    .on( 'fileuploadstop', function(data) {
+        if ( _hasUnsubmitted ) {
+            // now submit all form fields...
+            _doEditRequest( $('.upload-form').serializeArray() );
+            _hasUnsubmitted = false;
+        }
+    })
+
+    $('.upload-form').submit(function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var formFields = $(':input[data-has-id]', this).serializeArray();
+        if ( formFields.length < $(this).serializeArray().length ) {
+            _hasUnsubmitted = true;
+        }
+
+        _doEditRequest( formFields );
+    })
 });

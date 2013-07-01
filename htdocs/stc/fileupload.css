@@ -5,26 +5,27 @@
 }
 
 .drop_zone {
-  color: silver;
+  filter: alpha(opacity=50);
+  opacity: 0.2;
   font-size: 6em;
   padding: 20px;
   border: 3px dashed;
   text-align: center;
 }
 
-output {
+.upload-form output {
   margin-top: 1.5em;
 }
 
-output ul {
+.upload-form output ul {
   list-style: none;
 }
 
-#filepreview li.row {
-  margin-top: 1.5em;
+.upload-form output li.row {
+  padding-top: 2em;
 }
 
-#fileupload {
+.upload-form fieldset {
   border: none;
 }
 
