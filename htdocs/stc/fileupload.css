@@ -29,6 +29,6 @@
   border: none;
 }
 
-.progress {
-  margin-top: 1em;
+.image-preview canvas {
+  margin-bottom: 1em;
 }
