@@ -3,7 +3,8 @@ $(function() {
     // it is not the same as the file id
     var _uiCounter = 0;
 
-    var _hasUnsubmitted = false;
+    var _uploadInProgress = false;
+    var _metadataInProgress = false;
 
     // hide the upload button, we'll have another one for saving descriptions
     $("input[type=submit]").hide();
@@ -103,14 +104,19 @@ $(function() {
        var progress = parseInt(data.loaded / data.total * 100, 10);
        data.context.find( ".meter" ).css( 'width', progress + '%' );
     })
+    .on( 'fileuploadstart', function(data) {
+        _uploadInProgress = true;
+    })
     // now make sure we upload the metadata in case we tried to submit metadata
     // before we got an id back (from the file upload)
     .on( 'fileuploadstop', function(data) {
-        if ( _hasUnsubmitted ) {
+        if ( _metadataInProgress ) {
             // now submit all form fields...
             _doEditRequest( $('.upload-form').serializeArray() );
-            _hasUnsubmitted = false;
+            _metadataInProgress = false;
         }
+
+        _uploadInProgress = false;
     })
 
     $('.upload-form').submit(function(e) {
@@ -119,7 +125,7 @@ $(function() {
 
         var formFields = $(':input[data-has-id]', this).serializeArray();
         if ( formFields.length < $(this).serializeArray().length ) {
-            _hasUnsubmitted = true;
+            _metadataInProgress = true;
         }
 
         _doEditRequest( formFields );
@@ -137,5 +143,11 @@ $(function() {
                 .addClass( "disabled" )
                 .attr( "aria-invalid", true );
 
+    });
+
+    $(window).on('beforeunload', function(e) {
+        if(_uploadInProgress || _metadataInProgress) {
+            return "Your files haven't finished uploading yet.";
+        }
     });
 });;
