@@ -75,12 +75,21 @@ $(function() {
                 // and make it easier for us to figure out the form fields we expect to work with
                 // (we don't want fileids_### on this one)
                 .end().append( "<input type='hidden' name='fileids' value='" + fileid +"' />");
+        } else {
+            $(data.context).trigger( "uploaderror", [ { error : data.error } ] );
+        }
+    })
+    .on( 'fileuploadfail', function(e, data) {
+        var responseText;
+        if ( data.jqXHR && data.jqXHR.responseText ) {
+            var response = JSON.parse(data.jqXHR.responseText);
+            responseText = response.error;
+        }
+        if ( ! responseText ) {
+            responseText = data.errorThrown;
         }
 
-        // TODO: error-handling
-    })
-    .on( 'fileuploadfail', function( e, data) {
-        // TODO: error-handling
+        $(data.context).trigger( "uploaderror", [ { error: responseText } ] );
     })
     .on( 'fileuploadprocessalways', function( e, data ) {
         var index = data.index;
@@ -114,5 +123,19 @@ $(function() {
         }
 
         _doEditRequest( formFields );
-    })
-});
+    });
+
+    // error handler when uploading an image
+    $(".upload-form-preview ul").on( 'uploaderror', function(e, data) {
+        $(e.target)
+            // error message
+            .find( ".progress.success" )
+                .replaceWith( "<small class='error' role='alert'>" + data.error + "</small>")
+            .end()
+            // dim text fields (don't actually disable though, may still want the text inside)
+            .find( ":input" )
+                .addClass( "disabled" )
+                .attr( "aria-invalid", true );
+
+    });
+});;
