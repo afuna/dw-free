@@ -98,10 +98,9 @@ sub file_new_handler {
 #     1234: {
 #         security => "public",  # public, private, access, usemask
 #         allowmask => 3553,     # only valid in usemask security
-#         props => {
-#             title => "some title",
-#             otherprop => 5,
-#         }
+#         title => "some title", # else, the name of the property
+#         otherprop => 5,
+#         ...
 #     }
 #     5653: ...
 #  }
@@ -123,10 +122,10 @@ sub file_edit_handler {
         or return api_error( $r->HTTP_BAD_REQUEST, 'Invalid/no JSON input' );
 
     # First pass to check arguments.
+    my %media;
     foreach my $id ( keys %$args ) {
-        my $media = DW::Media->new( user => $rv->{u}, mediaid => int( $id / 256 ) )
+        $media{$id} = DW::Media->new( user => $rv->{u}, mediaid => int( $id / 256 ) )
             or return api_error( $r->NOT_FOUND, 'Media ID not found or invalid' );
-        $args->{$id}->{media} = $media;
 
         return api_error( $r->HTTP_BAD_REQUEST, 'Security invalid' )
             if $args->{$id}->{security} &&
@@ -138,11 +137,12 @@ sub file_edit_handler {
                 unless $args->{$id}->{allowmask} =~ /^\d+$/;
         }
 
-        $args->{$id}->{props} ||= {};
-        return api_error( $r->HTTP_BAD_REQUEST, 'Props section must be dict' )
-            unless ref $args->{$id}->{props} eq 'HASH';
-        foreach my $prop ( keys %{$args->{$id}->{props}} ) {
-            my $pobj = LJ::get_prop( media => $prop );
+        # Check to be sure this is valid. Security and Allowmask are separate
+        # from the rest, which are properties.
+        foreach my $key ( keys %{$args->{$id}} ) {
+            next if $key eq 'security' || $key eq 'allowmask';
+
+            my $pobj = LJ::get_prop( media => $key );
             return api_error( $r->HTTP_BAD_REQUEST, 'Invalid property' )
                 unless ref $pobj eq 'HASH' && $pobj->{id};
         }
@@ -151,16 +151,18 @@ sub file_edit_handler {
     # We did that in two phases so we could verify that all of the objects
     # were loadable, to try to make it an atomic process.
     foreach my $id ( keys %$args ) {
-        my $media = $args->{$id}->{media};
-        foreach my $prop ( keys %{$args->{$id}->{props}} ) {
-            $media->prop( $prop => $args->{$id}->{props}->{$prop} );
+        my ( $security, $allowmask ) = ( delete $args->{$id}->{security},
+            int( delete $args->{$id}->{allowmask} // 0 ) );
+        if ( defined $security ) {
+            $media{$id}->set_security(
+                security  => $security,
+                allowmask => $allowmask,
+            );
         }
 
-        if ( my $security = $args->{$id}->{security} ) {
-            $media->set_security(
-                security  => $security,
-                allowmask => int( $args->{$id}->{allowmask} // 0 ),
-            );
+        # At this point, we must have deleted all non-property items.
+        foreach my $prop ( keys %{$args->{$id}} ) {
+            $media{$id}->prop( $prop => $args->{$id}->{$prop} );
         }
     }
 
