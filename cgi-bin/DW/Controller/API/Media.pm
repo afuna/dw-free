@@ -90,7 +90,22 @@ sub file_new_handler {
     return api_error( $r->HTTP_BAD_REQUEST, 'No uploads found' );
 }
 
-# Allows editing the metadata and security on a media object.
+# Allows editing the metadata and security on a media object. The input to this
+# function is a dict, keys are the ids to modify, and the value is another dict
+# that contains what to modify. Example:
+#
+#  {
+#     1234: {
+#         security => "public",  # public, private, access, usemask
+#         allowmask => 3553,     # only valid in usemask security
+#         props => {
+#             title => "some title",
+#             otherprop => 5,
+#         }
+#     }
+#     5653: ...
+#  }
+#
 sub file_edit_handler {
     # we want to handle the not logged in case ourselves
     my ( $ok, $rv ) = controller( anonymous => 1 );
@@ -104,10 +119,52 @@ sub file_edit_handler {
     LJ::isu( $rv->{u} )
         or return api_error( $r->HTTP_UNAUTHORIZED, 'Not logged in' );
 
-    warn Data::Dumper::Dumper( from_json( $r->content ) );
+    my $args = $r->json
+        or return api_error( $r->HTTP_BAD_REQUEST, 'Invalid/no JSON input' );
+
+    # First pass to check arguments.
+    foreach my $id ( keys %$args ) {
+        my $media = DW::Media->new( user => $rv->{u}, mediaid => int( $id / 256 ) )
+            or return api_error( $r->NOT_FOUND, 'Media ID not found or invalid' );
+        $args->{$id}->{media} = $media;
+
+        return api_error( $r->HTTP_BAD_REQUEST, 'Security invalid' )
+            if $args->{$id}->{security} &&
+               $args->{$id}->{security} !~ /^(?:public|private|usemask)$/;
+        if ( exists $args->{$id}->{allowmask} ) {
+            return api_error( $r->HTTP_BAD_REQUEST, 'Allowmask invalid with chosen security' )
+                unless $args->{$id}->{security} eq 'usemask';
+            return api_error( $r->HTTP_BAD_REQUEST, 'Allowmask must be numeric' )
+                unless $args->{$id}->{allowmask} =~ /^\d+$/;
+        }
+
+        $args->{$id}->{props} ||= {};
+        return api_error( $r->HTTP_BAD_REQUEST, 'Props section must be dict' )
+            unless ref $args->{$id}->{props} eq 'HASH';
+        foreach my $prop ( keys %{$args->{$id}->{props}} ) {
+            my $pobj = LJ::get_prop( media => $prop );
+            return api_error( $r->HTTP_BAD_REQUEST, 'Invalid property' )
+                unless ref $pobj eq 'HASH' && $pobj->{id};
+        }
+    }
+
+    # We did that in two phases so we could verify that all of the objects
+    # were loadable, to try to make it an atomic process.
+    foreach my $id ( keys %$args ) {
+        my $media = $args->{$id}->{media};
+        foreach my $prop ( keys %{$args->{$id}->{props}} ) {
+            $media->prop( $prop => $args->{$id}->{props}->{$prop} );
+        }
+
+        if ( my $security = $args->{$id}->{security} ) {
+            $media->set_security(
+                security  => $security,
+                allowmask => int( $args->{$id}->{allowmask} // 0 ),
+            );
+        }
+    }
 
     return api_ok( 1 );
-
 }
 
 1;
