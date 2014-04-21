@@ -141,14 +141,14 @@ sub checkbox_nested {
     $args->{class} ||= "checkbox";
 
     my $label = delete $args->{label};
-    my $include_hidden = delete $args->{remember_old_state} || 0;
+    my $include_hidden = (delete $args->{remember_old_state} || 0) && $args->{selected};
 
     # makes the form element use the default or an explicit value...
     $self->_process_value_and_label( $args, use_as_value => "selected", noautofill => 1 );
 
     $ret .= "<label for='$args->{id}'>" . LJ::html_check( $args ) . " $label</label>";
     $ret .= LJ::html_hidden( { name => $args->{name} . "_old" , value => $args->{value}} )
-        if $args->{selected};
+        if $include_hidden;
 
     return $ret;
 }

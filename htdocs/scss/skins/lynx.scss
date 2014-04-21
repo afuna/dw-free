@@ -1,23 +1,34 @@
 // color names. Only use these variables in the color assignment section
-$_black: #000;
+$_black:     #000;
+$_white:     #FFF;
+$_dark-gray: #636363;
 
 // color assignment
 $text-color: $_black;
+$primary-text-color: $_white;
+$inactive-color: $_dark-gray;
+$background-color: $_white;
 
 @import "skins/alert-colors";
 
-
+$body-bg:           $background-color;
 $body-font-color:   $text-color;
+$form-font-color:   rgba(0,0,0,0.75);
+$form-bg-color:     #f7f7f7;
 
 // we want to base these on $body-font-color rather than the random variables they're based on
 $code-color:                            tint( $body-font-color, 20% );
 $blockquote-font-color:                 tint( $body-font-color, 20% );
 $small-font-color:                      $body-font-color;
 
-$include-html-classes: true;
-@import "foundation/foundation";
+// sub-nav
+$sub-nav-font-color:	$inactive-color;
 
-@import "skins/skin-colors";
+// pagination
+$pagination-link-font-color:	 $inactive-color;
+$pagination-link-unavailable-font-color:	$inactive-color;
+
+@import "skins/global-styles";
 
 #content {
     @include grid-row(container);
