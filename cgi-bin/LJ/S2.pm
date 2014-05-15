@@ -856,6 +856,7 @@ sub s2_context
         LJ::S2::populate_system_props($ctx);
         LJ::S2::alias_renamed_props( $ctx );
         LJ::S2::alias_overriding_props( $ctx );
+        LJ::S2::override_props_with_get( $ctx ) if $LJ::IS_DEV_SERVER;
         S2::set_output(sub {});  # printing suppressed
         S2::set_output_safe(sub {});
         eval { S2::run_code($ctx, "prop_init()"); };
@@ -1318,6 +1319,15 @@ sub alias_overriding_props {
     while ( my ( $original, $overriding ) = each %overrides ) {
         $ctx->[S2::PROPS]->{$original} = $ctx->[S2::PROPS]->{$overriding} if $ctx->[S2::PROPS]->{$overriding};
     }
+}
+
+sub override_props_with_get {
+    my $ctx = $_[0];
+
+    my $get = DW::Request->get->get_args;
+    $ctx->[S2::PROPS]->{layout_type} = $get->{layout_type} if $get->{layout_type};
+    $ctx->[S2::PROPS]->{module_time_show} = 0;
+    $ctx->[S2::PROPS]->{num_items_recent} = 10;
 }
 
 sub convert_prop_val {
