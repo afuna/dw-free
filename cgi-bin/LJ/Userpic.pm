@@ -1256,10 +1256,13 @@ sub set_and_rename_keywords {
                     $u->do( "UPDATE userpicmap3 SET kwid = ? WHERE kwid = ? AND userid = ?",
                             undef, $u->get_keyword_id( $newkw ), $u->get_keyword_id( $origkw ), $u->id );
                     die $u->errstr if $u->err;
-                } else {
-                    my $new_mapid = LJ::alloc_user_counter( $u, 'Y' );
-                    $u->do( "INSERT INTO userpicmap3 SET mapid = ?, kwid = ?, userid = ?, picid = ?",
-                            undef, $new_mapid, $u->get_keyword_id( $newkw ), $u->id, $self->picid );
+                } else { # pic#xx
+                    my $picid = $1;
+
+                    # get (or create) the mapid for picxx
+                    my $mapid_for_picxx = $u->get_mapid_from_keyword( $origkw );
+                    $u->do( "UPDATE userpicmap3 SET kwid = ? WHERE kwid is NULL AND userid = ? AND picid = ?",
+                            undef, $u->get_keyword_id( $newkw ), $u->id, $picid );
                     die $u->errstr if $u->err;
                 }
             }

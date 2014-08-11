@@ -18,7 +18,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 35;
+use Test::More tests => 33;
 
 use lib "$ENV{LJHOME}/cgi-bin";
 BEGIN { require 'ljlib.pl'; }
@@ -30,21 +30,19 @@ use LJ::Entry;
 chdir "$Bin/data/userpics" or die "Failed to chdir to t/data/userpics";
 
 my $up;
-my $u = temp_user();
-ok($u, "temp user");
-die unless $u;
 
 sub run_tests {
 
     # rename unamed unused userpic
     {
+        my $u = temp_user();
         my $up_t1 = eval { LJ::Userpic->create($u, data => file_contents("good.jpg")); };
         ok( $up_t1, "created userpic: no keyword" );
         my $pic_num_keyword_t1 = $up_t1->keywords;
         ok( $pic_num_keyword_t1 =~ /^\s*pic\#(\d+)\s*$/, "userpic has blank (pic\#num) keyword" );
         $up_t1->set_and_rename_keywords( "keyword", $pic_num_keyword_t1 );
         my $new_keyword_t1 = $up_t1->keywords;
-        ok( $new_keyword_t1 eq "keyword", "userpic now has keyword: keyword - $new_keyword_t1" );
+        is( $new_keyword_t1, "keyword", "userpic now has keyword: keyword" );
 
         # rename second unamed unused userpic
         # check first userpic still renamed
@@ -54,16 +52,19 @@ sub run_tests {
         ok( $pic_num_keyword2_t1 =~ /^\s*pic\#(\d+)\s*$/, "userpic 2 has blank keyword" );
         $up2_t1->set_and_rename_keywords( "keyword2", $pic_num_keyword2_t1 );
         my $new_keyword2_t1 = $up2_t1->keywords;
-        ok( $new_keyword2_t1 eq "keyword2", "userpic 2 now has keyword: keyword2 - $new_keyword2_t1" );
-        ok( $new_keyword_t1 eq "keyword", "userpic 1 still has keyword: keyword - $new_keyword_t1" );
+        is( $new_keyword2_t1, "keyword2", "userpic 2 now has keyword: keyword2" );
+        is( $new_keyword_t1, "keyword", "userpic 1 still has keyword: keyword" );
 
         $up_t1->delete;
         $up2_t1->delete;
+
+        delete_all_userpics( $u );
     }
 
     # checking post and comments with renaming
     # rename userpic - check userpic still attached to post
     {
+        my $u = temp_user();
         my $up_t2 = eval { LJ::Userpic->create($u, data => file_contents("good.jpg")); };
         ok( $up_t2, "created userpic: no keyword" );
         my $pic_num_keyword_t2 = $up_t2->keywords;
@@ -76,9 +77,9 @@ sub run_tests {
 
         $up_t2->set_and_rename_keywords( "keyword", $pic_num_keyword_t2 );
         my $new_keyword_t2 = $up_t2->keywords;
-        ok( $new_keyword_t2 eq "keyword", "userpic now has keyword: keyword - $new_keyword_t2" );
+        is( $new_keyword_t2, "keyword", "userpic now has keyword: keyword" );
         my $check_entry_keyword_t2 = $entry_obj_t2->userpic_kw;
-        ok( $check_entry_keyword_t2 eq "keyword", "entry now has keyword: keyword -  $check_entry_keyword_t2" );
+        is( $check_entry_keyword_t2, "keyword", "entry now has keyword: keyword" );
         
 
         # make a comment with an unamed userpic
@@ -108,12 +109,15 @@ sub run_tests {
         ok($dres_t2, "successfully deleted entry");
         $up_t2->delete;
         $up2_t2->delete;
+
+        delete_all_userpics( $u );
     }
 
 
     # posting and commenting where keywords are changed but not renamed
     # change usepic keyword without renaming - check userpic no longer attached to post
     {
+        my $u = temp_user();
         my $up_t3 = eval { LJ::Userpic->create($u, data => file_contents("good.jpg")); };
         ok( $up_t3, "created userpic: no keyword" );
         my $pic_num_keyword_t3 = $up_t3->keywords;
@@ -126,8 +130,8 @@ sub run_tests {
 
         $up_t3->set_keywords( "keyword", $pic_num_keyword_t3 );
         my $new_keyword_t3 = $up_t3->keywords;
-        ok( $new_keyword_t3 eq "keyword", "userpic now has keyword: keyword - $new_keyword_t3" );
-        ok( $entry_keyword3_t3 eq $pic_num_keyword_t3, "entry still has pic num keyword: $entry_keyword3_t3" );
+        is( $new_keyword_t3, "keyword", "userpic now has keyword: keyword" );
+        is( $entry_keyword3_t3, $pic_num_keyword_t3, "entry still has pic num keyword: $pic_num_keyword_t3" );
         
         # make a comment with an unamed userpic
         # change userpic keyword without renaming - check userpic no longer attached to comment
@@ -146,21 +150,20 @@ sub run_tests {
 
         $up2_t3->set_keywords( "keyword2", $pic_num_keyword2_t3 );
         my $new_keyword2_t3 = $up2_t3->keywords;
-        ok( $new_keyword2_t3 eq "keyword2", "userpic 2 now has keyword: keyword2 - $new_keyword2_t3" );
+        is( $new_keyword2_t3, "keyword2", "userpic 2 now has keyword: keyword2" );
         my $comment_keyword_t3 = $fake_comment_t3->userpic_kw;
         ok( !$comment_keyword_t3, "comment still has no keyword" );
-        ok( $entry_keyword3_t3 eq $pic_num_keyword_t3, "entry still has pic num keyword: $entry_keyword3_t3" );
+        is( $entry_keyword3_t3, $pic_num_keyword_t3, "entry still has pic num keyword: $pic_num_keyword_t3" );
 
         my $dres = LJ::delete_entry($u, $entry_obj_t3->jitemid);
         ok( $dres, "successfully deleted entry" );
 
         $up_t3->delete;
         $up2_t3->delete;
+
+        delete_all_userpics( $u );
     }
 }
-
-eval { delete_all_userpics($u) };
-ok( !$@, "deleted all userpics, if any existed" );
 
 run_tests();
 
