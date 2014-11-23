@@ -25,12 +25,16 @@ body<=
 
     my $themeid = $GET{themeid}+0;
     my $layoutid = $GET{layoutid}+0;
+    my $layout = $GET{layout};
+    my $layout_type = $GET{layout_type};
 
     my $theme;
     if ($themeid) {
         $theme = LJ::S2Theme->load_by_themeid($themeid, $u);
     } elsif ($layoutid) {
         $theme = LJ::S2Theme->load_custom_layoutid($layoutid, $u);
+    } elsif ($layout) {
+        $theme = LJ::S2Theme->load_default_of( $layout . "/layout" );
     } else {
         return $ML{'.error.id'};
     }
@@ -42,7 +46,7 @@ body<=
     if ( $u->is_identity ) {
         return BML::redirect( $u->openid_journal_base .  "/?s2id=$styleid" );
     } else {
-        return BML::redirect( $u->journal_base . "/?s2id=$styleid" );
+        return BML::redirect( $u->journal_base . "/?s2id=$styleid&layout_type=$layout_type" );
     }
 }
 _code?>
