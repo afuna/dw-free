@@ -555,6 +555,8 @@ sub module_iframe_tag {
     $width = 50 if $width < 50;
     $height = 50 if $height < 50;
 
+    warn "width: $width, $width_unit";
+    warn "height: $height, $height_unit";
     if ( $width_unit eq "%" ) {
         $width = MAX_WIDTH_PERCENT if $width > MAX_WIDTH_PERCENT;
     } else {
@@ -566,6 +568,8 @@ sub module_iframe_tag {
     } else {
         $height = MAX_HEIGHT if $height > MAX_HEIGHT;
     }
+    warn "adjusted width: $width, $width_unit";
+    warn "adjusted height: $height, $height_unit";
 
     my $wrapper_style = "max-width: $width" . ($width_unit || "px") . "; max-height: " . MAX_HEIGHT . "px;";
 
